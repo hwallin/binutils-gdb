@@ -724,7 +724,7 @@ struct tracepoint
   enum tracepoint_type type;
 
   /* True if the tracepoint is currently enabled.  */
-  int8_t enabled;
+  uint32_t enabled;
 
   /* The number of single steps that will be performed after each
      tracepoint hit.  */
