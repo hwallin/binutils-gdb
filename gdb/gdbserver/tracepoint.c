@@ -2775,13 +2775,19 @@ cmd_qtenable_disable (char *own_buf, int enable)
 		   enable ? "Enabling" : "Disabling",
 		   (int) num, paddress (addr));
 
-      tp->enabled = enable;
-
       if (tp->type == fast_tracepoint || tp->type == static_tracepoint)
 	{
 	  int ret;
 	  int offset = offsetof (struct tracepoint, enabled);
 	  CORE_ADDR obj_addr = tp->obj_addr_on_target + offset;
+
+	  if (current_thread == NULL)
+	    {
+	      trace_debug ("Trying to enable/disable the tracepoint "
+			   "without inferior");
+	      strcpy (own_buf, "E.No process attached.");
+	      return;
+	    }
 
 	  ret = prepare_to_access_memory ();
 	  if (ret)
@@ -2802,6 +2808,8 @@ cmd_qtenable_disable (char *own_buf, int enable)
 	      return;
 	    }
 	}
+
+      tp->enabled = enable;
 
       write_ok (own_buf);
     }
