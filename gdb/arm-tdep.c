@@ -11132,6 +11132,11 @@ arm_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
     user_reg_add (gdbarch, arm_register_aliases[i].name,
 		  value_of_arm_user_reg, &arm_register_aliases[i].regnum);
 
+  set_gdbarch_fast_tracepoint_valid_at (gdbarch,
+					arm_fast_tracepoint_valid_at);
+
+  set_gdbarch_relocate_instruction (gdbarch, arm_relocate_instruction);
+
   return gdbarch;
 }
 
