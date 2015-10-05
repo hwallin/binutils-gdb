@@ -917,6 +917,15 @@ arm_regs_info (void)
     return &regs_info_arm;
 }
 
+static int
+is_target_arm (CORE_ADDR to, CORE_ADDR from)
+{
+  CORE_ADDR ptr = to;
+  write_inferior_memory (to, (unsigned char *) &from, 4);
+  relocate_instruction (&ptr, 0xFFFFFFFF);
+  return (to == ptr) ? 0 : 1;
+}
+
 static uint32_t
 mk_t_b_rel (CORE_ADDR from, CORE_ADDR to)
 {

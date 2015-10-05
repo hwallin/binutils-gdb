@@ -10447,7 +10447,14 @@ arm_relocate_instruction_func (struct relocate_insn *rel)
   rel->byte_order_for_code = gdbarch_byte_order_for_code (rel->gdbarch);
   rel->result = 0;
 
-  if (arm_pc_is_thumb (rel->gdbarch, rel->oldloc))
+  if (rel->oldloc == 0xFFFFFFFF)
+    {
+      uint32_t tmp = read_memory_unsigned_integer (*(rel->to), 4,
+						   rel->byte_order_for_code);
+      if (! arm_pc_is_thumb (rel->gdbarch, tmp))
+	*rel->to += 1;
+    }
+  else if (arm_pc_is_thumb (rel->gdbarch, rel->oldloc))
     {
       uint16_t insn1;
       uint16_t insn2;
