@@ -22,6 +22,7 @@
 #include <ctype.h>		/* XXX for isupper ().  */
 
 #include "frame.h"
+#include "disasm.h"
 #include "inferior.h"
 #include "infrun.h"
 #include "gdbcmd.h"
@@ -10485,6 +10486,52 @@ arm_relocate_instruction (struct gdbarch *gdbarch,
   rel.oldloc = oldloc;
 
   arm_relocate_instruction_func (&rel);
+}
+
+static int
+arm_fast_tracepoint_valid_at (struct gdbarch *gdbarch,
+			      CORE_ADDR addr, char **msg)
+{
+  static struct ui_file *gdb_null = NULL;
+  int len;
+
+  /* Check if the instruction is relocatable.   */
+  if (arm_check_relocate_instruction (gdbarch, addr, msg) == -1)
+    return 0;
+
+  /* Dummy file descriptor for the disassembler.  */
+  if (!gdb_null)
+    gdb_null = ui_file_new ();
+
+  /* A branch instruction used for fast tracepoint takes 4 bytes.
+     (A 2 bytes branch instruction only gets us 4k away,
+     so will not be enough.)
+
+     target gdbserver will validate that the relative branch
+     distance will fit in the instructions.
+     (16M for Thumb, 32M for ARM)
+
+     We only allow to replace one instuction. (4 bytes)
+     Replacing 2 instructions is not safe. Consider
+     the case where code wants to jump to the 2nd instruction - it
+     will jump into the middle of a branch instruction.   */
+
+  if (arm_pc_is_thumb (gdbarch, addr))
+    {
+      len = gdb_print_insn (gdbarch, addr, gdb_null, NULL);
+      if (len == 2)
+	{
+	  if (msg)
+	    *msg = xstrprintf (_("; instruction is only 2 bytes long, "
+				 "need 4 bytes for the jump"));
+	  return 0;
+	}
+    }
+
+  if (msg)
+    *msg = NULL;
+
+  return 1;
 }
 
 
