@@ -918,6 +918,30 @@ arm_regs_info (void)
 }
 
 static int
+arm_get_thread_area (int lwpid, CORE_ADDR *addr)
+{
+  uint32_t val;
+
+  if (ptrace (PTRACE_GET_THREAD_AREA, lwpid, NULL, &val) != 0)
+    return -1;
+
+  *addr = val;
+  return 0;
+}
+
+static int
+arm_get_min_fast_tracepoint_insn_len(void)
+{
+  return 4;
+}
+
+static int
+arm_supports_tracepoints(void)
+{
+  return 1;
+}
+
+static int
 is_target_arm (CORE_ADDR to, CORE_ADDR from)
 {
   CORE_ADDR ptr = to;
@@ -1324,6 +1348,12 @@ struct linux_target_ops the_low_target = {
   arm_new_thread,
   arm_new_fork,
   arm_prepare_to_resume,
+  NULL,                         /* process_qsupported */
+  arm_supports_tracepoints,     /* supports_tracepoints */
+  arm_get_thread_area,          /* get_thread_area */
+  arm_install_fast_tracepoint_jump_pad, /* install_fast_tracepoint_jump_pad */
+  NULL,                         /* emit_ops */
+  arm_get_min_fast_tracepoint_insn_len, /* get_min_fast_tracepoint_insn_len */
 };
 
 void
